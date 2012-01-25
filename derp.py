@@ -12,10 +12,10 @@ try:
 except ImportError:
     has_settings = False
 
-def get_config(key):
+def get_config(key, default=None):
     if has_settings:
-        return getattr(settings, key, None)
-    return os.environ.get(key, None)
+        return getattr(settings, key, default)
+    return os.environ.get(key, default)
 
 AWS_KEY = get_config('AWS_KEY')
 AWS_SECRET = get_config('AWS_SECRET')
@@ -65,4 +65,8 @@ def index():
     return render_template('index.html', **context)
 
 if __name__ == '__main__':
-    app.run(debug=True, port=8000)
+    app.run(
+        debug=get_config('DEBUG') is not None,
+        host=get_config('HOST', '0.0.0.0'),
+        port=get_config('PORT', 8000),
+    )
