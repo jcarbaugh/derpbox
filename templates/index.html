@@ -41,15 +41,21 @@
         <script>
 
         	var $realFile = $('#file-input');
+        	var $fauxFileText = $('.faux-file-txt');
+        	var $fauxFileButton = $('.faux-file-btn');
 
-        	$('.faux-file-btn').click(function(ev) {
+        	$fauxFileButton.click(function(ev) {
         		$realFile.click();
         		ev.preventDefault();
         	});
 
         	$realFile.change(function() {
         		var path = $(this).val();
-        		$('.faux-file-txt').val(path.split("\\").slice(-1)[0]);
+        		$fauxFileText.val(path.split("\\").slice(-1)[0]);
+        	});
+
+        	$fauxFileText.focus(function() {
+        		$(this).blur();
         	});
 
         	$('#uploader').submit(function() {
@@ -57,6 +63,8 @@
         			alert('Gotta pick a file first, pal.')
                     ev.preventDefault();
         		}
+        		$fauxFileButton.attr('disabled', 'disabled');
+        		$('button[type=submit]').attr('disabled', 'disabled').text('Uploading...');
         	});
 
         </script>
