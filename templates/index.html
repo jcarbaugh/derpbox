@@ -2,95 +2,62 @@
 <html lang="en">
     <head>
         <meta charset="utf-8">
-        <title>derpbox: send me the files</title>
-        <link href='http://fonts.googleapis.com/css?family=Gudea' rel='stylesheet' type='text/css'>
+        <title>File Upload</title>
+        <link href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/css/bootstrap-combined.no-icons.min.css" rel="stylesheet">
         <style>
             body { margin: 0; padding: 0; }
-            html { font-family: 'Gudea', sans-serif; margin: 0; padding: 0; }
+            html { font-family: 'Helvetica', sans-serif; margin: 0; padding: 0; }
             .container {
-                margin: 3em auto 0 auto;
+                padding-top: 100px;
                 text-align: center;
-                width: 800px;
             }
-            p.success {
-                background-color: #538624;
-                border-bottom: 2px solid #FFF;
-                color: #FFF;
-                font-size: 120%;
-                margin: -5px 0 1em 0;
-                padding: 1em 0 0.5em 0;
-                text-align: center;
-                text-shadow: 0 0 5px #333;
-                -webkit-box-shadow: 0 0 10px #000;
-                   -moz-box-shadow: 0 0 10px #000;
-                        box-shadow: 0 0 10px #000;
-            }
-            p.success b { color: yellow; }
-            form ul { list-style: none; margin: 0; padding: 0; }
-            form ul li { margin: 1em 0 2em 0; padding: 0; }
-            input { font-family: 'Gudea', sans-serif; }
-            input[type=file] {
-                border-bottom: 1px solid #999;
-                border-radius: 10px;
-                padding: 0.8em 1em;
-                width: 250px;
-            }
-            input[type=submit] {
-                background-color: #3c749a;
-                background: -webkit-linear-gradient(#3c749a 0%, #4d92bf 30%, #21608f 99%);
-                background:    -moz-linear-gradient(#3c749a 0%, #4d92bf 30%, #21608f 99%);
-                background:         linear-gradient(#3c749a 0%, #4d92bf 30%, #21608f 99%);
-                border: 1px solid #333;
-                border-radius: 30px;
-                color: #FFF;
-                font-size: 180%;
-                padding: 0.2em 2em;
-                text-shadow: 0 0 5px #333;
-                -webkit-box-shadow: 0 0 1px #000;
-                   -moz-box-shadow: 0 0 1px #000;
-                        box-shadow: 0 0 1px #000;
-            }
-            input[type=submit]:active {
-                background: -webkit-linear-gradient(#4d92bf 0%, #3c749a 30%, #4d92bf 99%);
-                background:    -moz-linear-gradient(#4d92bf 0%, #3c749a 30%, #4d92bf 99%);
-                background:         linear-gradient(#4d92bf 0%, #3c749a 30%, #4d92bf 99%);
-                text-shadow: 0 0 10px #333;
-            }
+            input[type=file] { display: none; }
+            button[type=submit] { margin-left: 20px; }
         </style>
     </head>
     <body>
-        {% if success %}
-            <p class="success">
-                <strong>Hooray!</strong> You successfully uploaded <b>{{ success.filename }}</b>.
-            </p>
-        {% endif %}
         <div class="container">
-            <form action="http://s3.amazonaws.com/{{ bucket }}/" method="post" enctype="multipart/form-data" id="uploader">
-                <input type="hidden" name="AWSAccessKeyId" value="{{ key }}">
+	        {% if success %}
+	            <p class="alert alert-success">
+	                <strong>Hooray!</strong> You have successfully uploaded <b>{{ success.filename }}</b>
+	            </p>
+	        {% endif %}
+            <form action="http://s3.amazonaws.com/{{ bucket }}/" method="post" enctype="multipart/form-data" id="uploader" class="form-inline">
+            	<input type="hidden" name="AWSAccessKeyId" value="{{ key }}">
                 <input type="hidden" name="policy" value="{{ policy }}">
                 <input type="hidden" name="signature" value="{{ signature }}">
                 <input type="hidden" name="key" value="${filename}">
                 <input type="hidden" name="acl" value="private">
                 <input type="hidden" name="success_action_redirect" value="{{ redirect }}">
-                <ul>
-                    <li>
-                        <label for="file-input">Select a file</label>
-                        <input type="file" name="file" id="file-input">
-                    </li>
-                    <li><input type="submit" name="submit" value="Upload it!"></li>
-                </ul>
+            	<input type="file" name="file" id="file-input">
+            	<div class="input-append">
+            		<input type="text" class="faux-file-txt input-xlarge">
+            		<button type="button" class="btn faux-file-btn">Select file</button>
+            	</div>
+            	<button type="submit" class="btn btn-primary">Upload it!</button>
             </form>
         </div>
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
         <script>
 
-            var form = document.getElementById('uploader');
-            form.addEventListener('submit', function(ev) {
-                var fi = document.getElementById('file-input');
-                if (fi.value === '') {
-                    alert('Gotta pick a file first, pal.')
+        	var $realFile = $('#file-input');
+
+        	$('.faux-file-btn').click(function(ev) {
+        		$realFile.click();
+        		ev.preventDefault();
+        	});
+
+        	$realFile.change(function() {
+        		var path = $(this).val();
+        		$('.faux-file-txt').val(path.split("\\").slice(-1)[0]);
+        	});
+
+        	$('#uploader').submit(function() {
+        		if ($realFile.val() === '') {
+        			alert('Gotta pick a file first, pal.')
                     ev.preventDefault();
-                }
-            }, false);
+        		}
+        	});
 
         </script>
     </body>
