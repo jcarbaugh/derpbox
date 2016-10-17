@@ -3,51 +3,75 @@
     <head>
         <meta charset="utf-8">
         <title>File Upload</title>
-        <link href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/css/bootstrap-combined.no-icons.min.css" rel="stylesheet">
+        <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
         <style>
             body { margin: 0; padding: 0; }
             html { font-family: 'Helvetica', sans-serif; margin: 0; padding: 0; }
+            h1 { margin-bottom: 1em; }
             .container {
                 padding-top: 100px;
                 text-align: center;
             }
             input[type=file] { display: none; }
-            button[type=submit] { margin-left: 20px; }
+            .upload-container { display: none; margin-top: 4em; }
         </style>
     </head>
     <body>
-        <div class="container">
-	        {% if success %}
-	            <p class="alert alert-success">
-	                <strong>Hooray!</strong> You have successfully uploaded <b>{{ success.filename }}</b>
-	            </p>
-	        {% endif %}
-            <form action="http://s3.amazonaws.com/{{ bucket }}/" method="post" enctype="multipart/form-data" id="uploader" class="form-inline">
-            	<input type="hidden" name="AWSAccessKeyId" value="{{ key }}">
-                <input type="hidden" name="policy" value="{{ policy }}">
-                <input type="hidden" name="signature" value="{{ signature }}">
-                <input type="hidden" name="key" value="${filename}">
-                <input type="hidden" name="acl" value="private">
-                <input type="hidden" name="success_action_redirect" value="{{ redirect }}">
-            	<input type="file" name="file" id="file-input">
-            	<div class="input-append">
-            		<input type="text" class="faux-file-txt input-xlarge">
-            		<button type="button" class="btn faux-file-btn">Select file</button>
-            	</div>
-            	<button type="submit" class="btn btn-primary">Upload it!</button>
-            </form>
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-sm-6 col-sm-offset-3">
+                    <div class="page-header">
+                        <h1>File Uploader <small>by Helping Pets Behave</small></h1>
+                    </div>
+                    <p class="lead">To start, click or tap "Select File" and choose the file you want to upload. If you are on a phone or iPad, you will be prompted to choose the photo, video, or other file you would like to upload.</p>
+        	        {% if success %}
+        	            <p class="alert alert-success">
+        	                <strong>Hooray!</strong> You have successfully uploaded <b>{{ success.filename }}</b>
+        	            </p>
+        	        {% endif %}
+                    <form action="{{ presigned.url }}" method="post" enctype="multipart/form-data" id="uploader">
+                        {% with fields = presigned.fields %}
+                    	<input type="hidden" name="AWSAccessKeyId" value="{{ fields.AWSAccessKeyId }}">
+                        <input type="hidden" name="policy" value="{{ fields.policy }}">
+                        <input type="hidden" name="signature" value="{{ fields.signature }}">
+                        <input type="hidden" name="key" value="{{ fields.key }}">
+                        <input type="hidden" name="acl" value="{{ fields.acl }}">
+                        <input type="hidden" name="success_action_redirect" value="{{ fields.success_action_redirect }}">
+                    	<input type="file" name="file" id="file-input">
+                        {% endwith %}
+                        <div class="form-group">
+                        	<div class="input-group">
+                                <span class="input-group-btn">
+                        		    <button type="button" class="btn btn-primary btn-lg faux-file-btn">Select File</button>
+                                </span>
+                        		<input type="text" class="form-control input-lg faux-file-txt input-xlarge">
+                        	</div>
+                        </div>
+                        <div class="form-group upload-container">
+                            <p class="lead">Great! Now, just click or tap the "Upload File" button.</p>
+                            <button type="submit" class="btn btn-lg btn-block btn-primary">Upload File</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
+
         <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
         <script>
 
         	var $realFile = $('#file-input');
         	var $fauxFileText = $('.faux-file-txt');
         	var $fauxFileButton = $('.faux-file-btn');
+            var $uploadContainer = $('.upload-container');
 
         	$fauxFileButton.click(function(ev) {
         		$realFile.click();
         		ev.preventDefault();
         	});
+
+            $realFile.change(function(ev) {
+                $uploadContainer.fadeIn();
+            });
 
         	$realFile.change(function() {
         		var path = $(this).val();
@@ -58,13 +82,14 @@
         		$(this).blur();
         	});
 
-        	$('#uploader').submit(function() {
+        	$('#uploader').submit(function(ev) {
         		if ($realFile.val() === '') {
-        			alert('Gotta pick a file first, pal.')
+        			alert('Gotta pick a file first, pal.');
                     ev.preventDefault();
-        		}
-        		$fauxFileButton.attr('disabled', 'disabled');
-        		$('button[type=submit]').attr('disabled', 'disabled').text('Uploading...');
+        		} else {
+        		    $fauxFileButton.attr('disabled', 'disabled');
+        		    $('button[type=submit]').attr('disabled', 'disabled').text('Uploading...');
+                }
         	});
 
         </script>

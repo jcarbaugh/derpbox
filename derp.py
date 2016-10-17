@@ -1,9 +1,8 @@
-from base64 import b64encode
 import datetime
-import hashlib
-import hmac
 import os
+from base64 import b64encode
 
+import boto3
 from flask import Flask, render_template, request
 
 try:
@@ -12,57 +11,56 @@ try:
 except ImportError:
     has_settings = False
 
-def get_config(key, default=None):
+
+def get_config(key, default=None, cast=None):
     if has_settings:
         return getattr(settings, key, default)
-    return os.environ.get(key, default)
+    val = os.environ.get(key, default)
+    if cast:
+        val = cast(val)
+    return val
+
 
 AWS_KEY = get_config('AWS_KEY')
 AWS_SECRET = get_config('AWS_SECRET')
 AWS_BUCKET = get_config('AWS_BUCKET')
 
 app = Flask(__name__)
+app.config['DEBUG'] = get_config('DEBUG') == 'True'
+
 
 @app.route("/")
 def index():
 
-    policy = {
-        "conditions": [
-            {"bucket": AWS_BUCKET},
-            {"acl": "private"},
-            ['starts-with', '$key', ''],
-        ]
-    }
-
-    # add expiration and redirect fields
-
-    now = datetime.datetime.utcnow()
-    then = now + datetime.timedelta(minutes=10)
-    policy['expiration'] = then.isoformat() + 'Z'
-
     redirect = request.url_root
-    policy['conditions'].append({"success_action_redirect": redirect})
 
-    # encode and sign policy
-
-    b64_policy = b64encode(str(policy))
-    signature = b64encode(
-        hmac.new(AWS_SECRET, b64_policy, hashlib.sha1).digest())
+    s3 = boto3.client(
+        's3', aws_access_key_id=AWS_KEY, aws_secret_access_key=AWS_SECRET)
+    presigned = s3.generate_presigned_post(
+        Bucket=AWS_BUCKET,
+        Key='${filename}',
+        Fields={
+            "acl": "private",
+            "success_action_redirect": redirect,
+        },
+        Conditions=[
+            {"acl": "private"},
+            {"success_action_redirect": redirect},
+        ],
+        ExpiresIn=3600
+    )
 
     # create template context
 
     context = {
-        'key': AWS_KEY,
-        'bucket': AWS_BUCKET,
-        'policy': b64_policy,
-        'signature': signature,
-        'redirect': redirect,
+        'presigned': presigned,
     }
 
     if 'key' in request.args:
         context['success'] = {'filename': request.args['key']}
 
     return render_template('index.html', **context)
+
 
 if __name__ == '__main__':
     app.run(
