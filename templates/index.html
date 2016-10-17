@@ -2,18 +2,20 @@
 <html lang="en">
     <head>
         <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>File Upload</title>
         <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
         <style>
             body { margin: 0; padding: 0; }
             html { font-family: 'Helvetica', sans-serif; margin: 0; padding: 0; }
-            h1 { margin-bottom: 1em; }
+            h1 { margin-bottom: 0.2em; }
             .container {
                 padding-top: 100px;
                 text-align: center;
             }
             input[type=file] { display: none; }
-            .upload-container { display: none; margin-top: 4em; }
+            .upload-container { display: none; margin-top: 3em; }
         </style>
     </head>
     <body>
@@ -21,14 +23,14 @@
             <div class="row">
                 <div class="col-sm-6 col-sm-offset-3">
                     <div class="page-header">
-                        <h1>File Uploader <small>by Helping Pets Behave</small></h1>
+                        <h1>File Uploader<br><small>Helping Pets Behave</small></h1>
                     </div>
-                    <p class="lead">To start, click or tap "Select File" and choose the file you want to upload. If you are on a phone or iPad, you will be prompted to choose the photo, video, or other file you would like to upload.</p>
-        	        {% if success %}
+                    {% if success %}
         	            <p class="alert alert-success">
-        	                <strong>Hooray!</strong> You have successfully uploaded <b>{{ success.filename }}</b>
+        	                <strong>Hooray!</strong> Your upload has been received.</b>
         	            </p>
         	        {% endif %}
+                    <p class="lead">To start, click or tap "Select File" and choose the file you want to upload. If you are on a phone or iPad, you will be prompted to choose the photo, video, or other file you would like to upload.</p>
                     <form action="{{ presigned.url }}" method="post" enctype="multipart/form-data" id="uploader">
                         {% with fields = presigned.fields %}
                     	<input type="hidden" name="AWSAccessKeyId" value="{{ fields.AWSAccessKeyId }}">
@@ -70,7 +72,8 @@
         	});
 
             $realFile.change(function(ev) {
-                $uploadContainer.fadeIn();
+                $('.alert').slideUp();
+                $uploadContainer.slideDown();
             });
 
         	$realFile.change(function() {
